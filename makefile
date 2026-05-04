@@ -1,0 +1,23 @@
+PP_DIR = pp
+HITLS_DIR = hitls
+
+CCFLAGS = -O2 -Wall -Wextra
+
+alice: alice.c
+	$(CC) $(CCFLAGS) -o $@ $^
+
+app: app.c $(HITLS_DIR)/*.c
+	$(CC) $(CCFLAGS) -o $@ $^ -I$(HITLS_DIR) -L$(HITLS_DIR) -lhitls_crypto -Wl,-rpath=$(HITLS_DIR)
+
+bob: bob.c $(HITLS_DIR)/*.c
+	$(CC) $(CCFLAGS) -o $@ $^ -I$(HITLS_DIR) -L$(HITLS_DIR) -lhitls_crypto -Wl,-rpath=$(HITLS_DIR)
+
+mallory: mallory.c $(HITLS_DIR)/*.c $(PP_DIR)/*.c
+	$(CC) $(CCFLAGS) -o $@ $^ -I$(HITLS_DIR) -I$(PP_DIR) -L$(HITLS_DIR) -lhitls_crypto -lmastik -Wl,-rpath=$(HITLS_DIR)
+
+eve: eve.c $(HITLS_DIR)/*.c
+	$(CC) $(CCFLAGS) -o $@ $^ -I$(HITLS_DIR) -L$(HITLS_DIR) -lhitls_crypto -Wl,-rpath=$(HITLS_DIR)
+
+.PHONY: clean
+clean:
+	rm -f alice app bob mallory eve
