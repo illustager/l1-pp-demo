@@ -6,10 +6,11 @@
 
 #include "pp.h"
 
-#define NUM_SAMPLES 1000000
+#define NUM_SAMPLES			1000000
+#define DELAY_LOOP_COUNT	0
 
-#define SERVER_PORT 8899
-#define BUFFER_SIZE 16
+#define SERVER_PORT			8899
+#define BUFFER_SIZE			16
 
 void bintostr(const uint8_t* bin, char* str, size_t len) {
 	for (size_t i = 0; i < len; i++) {
@@ -39,6 +40,7 @@ int main() {
 	printf("Recovered key:");
 	fflush(stdout);
 	for (int i = 0; i < 16; i++) {
+	    delayloop(DELAY_LOOP_COUNT);
 		printf("%02x", pp(crypto, NULL, NUM_SAMPLES, i));
 		fflush(stdout);
 	}

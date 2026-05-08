@@ -3,6 +3,9 @@ HITLS_DIR = hitls
 
 CCFLAGS = -O2 -Wall -Wextra
 
+.PHONY: all
+all: alice app bob mallory eve
+
 alice: alice.c
 	$(CC) $(CCFLAGS) -o $@ $^
 
