@@ -24,10 +24,12 @@ static const uint8_t sbox[256] = {
 
 static unsigned CACHE_SETS			= 64;
 static unsigned CACHE_LINE_SHIFT	= 4;
+static unsigned CACHE_LEVEL			= 1;
 
-void pp_init(unsigned cache_sets, unsigned cache_line_shift) {
+void pp_init(unsigned cache_sets, unsigned cache_line_shift, unsigned cache_level) {
 	CACHE_SETS = cache_sets;
 	CACHE_LINE_SHIFT = cache_line_shift;
+	CACHE_LEVEL = cache_level;
 }
 
 static void analyze(int64_t avg[256][1024], int *key, int *offset) {
@@ -76,7 +78,7 @@ uint8_t pp(crypto_fn crypto, void *data, unsigned samples, unsigned idx) {
 											crypto,
 											data,
 											0xff,
-											1);
+											CACHE_LEVEL);
 	
 	int key, offset;
 	analyze(clusters[idx].avg, &key, &offset);
