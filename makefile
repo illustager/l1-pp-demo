@@ -17,7 +17,7 @@ bob: bob.c $(HITLS_DIR)/*.c
 	$(CC) $(CCFLAGS) -o $@ $^ -I$(HITLS_DIR) -L$(HITLS_DIR) -lhitls_crypto -Wl,-rpath=$(HITLS_DIR)
 
 mallory: mallory.c $(HITLS_DIR)/*.c $(PP_DIR)/*.c $(MASTIK_DIR)/libmastik.a
-	$(CC) $(CCFLAGS) -o $@ $^ -I$(HITLS_DIR) -I$(PP_DIR) -L$(HITLS_DIR) -lhitls_crypto -L$(MASTIK_DIR) -lmastik -Wl,-rpath=$(HITLS_DIR):$(MASTIK_DIR)
+	$(CC) $(CCFLAGS) -o $@ $^ -I$(HITLS_DIR) -I$(PP_DIR) -I$(MASTIK_DIR) -L$(HITLS_DIR) -lhitls_crypto -L$(MASTIK_DIR) -lmastik -Wl,-rpath=$(HITLS_DIR):$(MASTIK_DIR)
 
 eve: eve.c $(HITLS_DIR)/*.c
 	$(CC) $(CCFLAGS) -o $@ $^ -I$(HITLS_DIR) -L$(HITLS_DIR) -lhitls_crypto -Wl,-rpath=$(HITLS_DIR)
