@@ -12,6 +12,7 @@
 #define DEFAULT_CACHE_LEVEL	1
 #define DEFAULT_KEY_START	0
 #define DEFAULT_KEY_LENGTH	16
+#define DEFAULT_MODE		2
 
 #define SERVER_PORT			8899
 #define BUFFER_SIZE			16
@@ -31,13 +32,14 @@ void tobinary(const char *data, uint8_t *des) {
 	}
 }
 
-void parser(int argc, char* argv[], int* num_samples, int* cache_sets, int* line_shift, int* cache_level, int* key_start, int* key_length) {
+void parser(int argc, char* argv[], int* num_samples, int* cache_sets, int* line_shift, int* cache_level, int* key_start, int* key_length, int* mode) {
 	*num_samples = DEFAULT_NUM_SAMPLES;
 	*cache_sets = DEFAULT_CACHE_SETS;
 	*line_shift = DEFAULT_LINE_SHIFT;
 	*cache_level = DEFAULT_CACHE_LEVEL;
 	*key_start = DEFAULT_KEY_START;
 	*key_length = DEFAULT_KEY_LENGTH;
+	*mode = DEFAULT_MODE;
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--num-samples") == 0 && i + 1 < argc) {
@@ -52,8 +54,10 @@ void parser(int argc, char* argv[], int* num_samples, int* cache_sets, int* line
 			*key_start = atoi(argv[++i]);
 		} else if (strcmp(argv[i], "--key-length") == 0 && i + 1 < argc) {
 			*key_length = atoi(argv[++i]);
+		} else if (strcmp(argv[i], "--mode") == 0 && i + 1 < argc) {
+			*mode = atoi(argv[++i]);
 		} else {
-			fprintf(stderr, "Usage: %s [--num-samples N] [--cache-sets N] [--line-shift N] [--cache-level N] [--key-start N] [--key-length N]\n", argv[0]);
+			fprintf(stderr, "Usage: %s [--num-samples N] [--cache-sets N] [--line-shift N] [--cache-level N] [--key-start N] [--key-length N] [--mode N]\n", argv[0]);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -73,6 +77,10 @@ void parser(int argc, char* argv[], int* num_samples, int* cache_sets, int* line
 		fprintf(stderr, "Number of samples must be a positive integer\n");
 		exit(EXIT_FAILURE);
 	}
+	if (*mode != 1 && *mode != 2) {
+		fprintf(stderr, "Invalid mode: %d. Mode must be 1 or 2.\n", *mode);
+		exit(EXIT_FAILURE);
+	}
 }
 
 void udp_init();
@@ -86,19 +94,26 @@ void crypto(uint8_t* input, uint8_t* output, void* data) {
 }
 
 int main(int argc, char* argv[]) {
-	int num_samples, cache_sets, line_shift, cache_level, key_start, key_length;
-	parser(argc, argv, &num_samples, &cache_sets, &line_shift, &cache_level, &key_start, &key_length);
-	printf("Using parameters: num_samples=%d, cache_sets=%d, line_shift=%d, cache_level=%d, key_start=%d, key_length=%d\n",
-		   num_samples, cache_sets, line_shift, cache_level, key_start, key_length);
+	int num_samples, cache_sets, line_shift, cache_level, key_start, key_length, mode;
+	parser(argc, argv, &num_samples, &cache_sets, &line_shift, &cache_level, &key_start, &key_length, &mode);
+	printf("Using parameters: num_samples=%d, cache_sets=%d, line_shift=%d, cache_level=%d, key_start=%d, key_length=%d, mode=%d\n",
+		   num_samples, cache_sets, line_shift, cache_level, key_start, key_length, mode);
 
 	pp_init(cache_sets, line_shift, cache_level);
 	udp_init();
 
 	printf("Recovered key:");
 	fflush(stdout);
-	for (int i = key_start; i < key_start + key_length; i++) {
-		printf("%02x", pp(crypto, NULL, num_samples, i));
-		fflush(stdout);
+	if (mode == 1) {
+		uint8_t *key = pp_r1(crypto, NULL, num_samples);
+		for (int i = key_start; i < key_start + key_length; i++) {
+			printf("%1x-", key[i]);
+		}
+	} else {
+		for (int i = key_start; i < key_start + key_length; i++) {
+			printf("%02x", pp_r2(crypto, NULL, num_samples, i));
+			fflush(stdout);
+		}
 	}
 	printf("\n");
 }

