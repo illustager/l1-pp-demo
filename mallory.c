@@ -13,8 +13,6 @@
 #define DEFAULT_KEY_START	0
 #define DEFAULT_KEY_LENGTH	16
 
-#define DELAY_LOOP_COUNT	0
-
 #define SERVER_PORT			8899
 #define BUFFER_SIZE			16
 
@@ -80,7 +78,10 @@ void parser(int argc, char* argv[], int* num_samples, int* cache_sets, int* line
 void udp_init();
 void udp_send(const uint8_t* data, size_t len);
 
-void crypto(uint8_t* input, uint8_t* output, void* _) {
+void crypto(uint8_t* input, uint8_t* output, void* data) {
+	(void)output;
+	(void)data;
+
 	udp_send(input, 16);
 }
 
@@ -96,7 +97,6 @@ int main(int argc, char* argv[]) {
 	printf("Recovered key:");
 	fflush(stdout);
 	for (int i = key_start; i < key_start + key_length; i++) {
-	    delayloop(DELAY_LOOP_COUNT);
 		printf("%02x", pp(crypto, NULL, num_samples, i));
 		fflush(stdout);
 	}
