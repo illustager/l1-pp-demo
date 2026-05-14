@@ -20,6 +20,8 @@ void tobinary(const char *data, uint8_t *des) {
 CRYPT_AES_Key rdkey;
 
 uint8_t* decrypt(const uint8_t* data, size_t len) {
+	(void)len;
+
 	static uint8_t plaintext[16];
 
 	// for (int i = 0; i < 16; i++) {
@@ -27,7 +29,7 @@ uint8_t* decrypt(const uint8_t* data, size_t len) {
 	// }
 	// printf("\n");
 
-	wp_decrypt_block(data, plaintext, &rdkey);
+	wp_decrypt_block((uint8_t*)data, plaintext, &rdkey);
 
 	// for (int i = 0; i < 16; i++) {
 	// 	printf("%02x", plaintext[i]);
@@ -45,7 +47,7 @@ int main(int argc, char *argv[]) {
 	wp_set_decrypt_key128(&rdkey, key);
 
     int sockfd;
-    struct sockaddr_in server_addr, transport_addr;
+    struct sockaddr_in server_addr;
     uint8_t buffer[BUFFER_SIZE];
 
     // 1. 创建 UDP socket

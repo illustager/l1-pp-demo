@@ -14,7 +14,10 @@ int main() {
 	udp_init();
 	while (1) {
 		char buffer[BUFFER_SIZE] = "A0: ";
-		fgets(buffer + 4, BUFFER_SIZE - 4, stdin);
+		char *result = fgets(buffer + 4, BUFFER_SIZE - 4, stdin);
+		if (!result) {
+			break;
+		}
 		size_t len = strlen(buffer);
 		if (len > 0 && buffer[len - 1] == '\n') {
 			buffer[len - 1] = '\0';

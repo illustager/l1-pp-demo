@@ -21,6 +21,8 @@ void tobinary(const char *data, uint8_t *des) {
 CRYPT_AES_Key rdkey;
 
 uint8_t* decrypt(const uint8_t* data, size_t len) {
+	(void)len;
+
 	static uint8_t plaintext[16];
 
 	// for (int i = 0; i < 16; i++) {
@@ -28,7 +30,7 @@ uint8_t* decrypt(const uint8_t* data, size_t len) {
 	// }
 	// printf("\n");
 
-	wp_decrypt_block(data, plaintext, &rdkey);
+	wp_decrypt_block((uint8_t*)data, plaintext, &rdkey);
 
 	// for (int i = 0; i < 16; i++) {
 	// 	printf("%02x", plaintext[i]);

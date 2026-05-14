@@ -21,6 +21,8 @@ void tobinary(const char *data, uint8_t *des) {
 CRYPT_AES_Key rdkey;
 
 uint8_t* cipher(const uint8_t* data, size_t len) {
+	(void)len;
+
 	static uint8_t ciphertext[16];
 
 	// for (int i = 0; i < 16; i++) {
@@ -28,7 +30,7 @@ uint8_t* cipher(const uint8_t* data, size_t len) {
 	// }
 	// printf("\n");
 
-	wp_encrypt_block(data, ciphertext, &rdkey);
+	wp_encrypt_block((uint8_t*)data, ciphertext, &rdkey);
 
 	// for (int i = 0; i < 16; i++) {
 	// 	printf("%02x", ciphertext[i]);
@@ -102,7 +104,7 @@ int main(int argc, char *argv[]) {
                (struct sockaddr *)&client_addr, client_len);
 		
 		// 6. 转发数据给 Bob
-		if (strncmp(buffer, "A0: ", 4) == 0) {
+		if (strncmp((const char*)buffer, "A0: ", 4) == 0) {
 			sendto(sockfd, ciphertext, BUFFER_SIZE, 0,
 				(const struct sockaddr *)&transport_addr, sizeof(transport_addr));
 		}
